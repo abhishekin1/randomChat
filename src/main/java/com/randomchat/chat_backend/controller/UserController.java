@@ -30,7 +30,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        System.out.println("inside get users...............................");
+        System.out.println("inside get usersa...............................");
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
