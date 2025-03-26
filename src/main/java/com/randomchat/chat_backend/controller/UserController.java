@@ -18,22 +18,25 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
+        System.out.println("inside get user..............................."+ user);
         return ResponseEntity.ok(userService.saveUser(user));
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<Optional<User>> getUserById(@PathVariable String userId) {
+        System.out.println("inside get user..............................."+ userId);
         return ResponseEntity.ok(userService.getUserByDeviceId(userId));
     }
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        System.out.println("inside get...............................");
+        System.out.println("inside get users...............................");
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable String userId) {
+        System.out.println("inside delete user..............................."+ userId);
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }

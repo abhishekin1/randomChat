@@ -17,8 +17,8 @@ public class Friendship {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;      // ID of the initiator
-    private Long friendId;    // ID of the friend
+    private String userId;      // ID of the initiator
+    private String friendId;    // ID of the friend
 
     private LocalDateTime createdAt;
 
