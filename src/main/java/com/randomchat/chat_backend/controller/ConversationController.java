@@ -1,6 +1,7 @@
 package com.randomchat.chat_backend.controller;
 
 import com.randomchat.chat_backend.model.Conversation;
+import com.randomchat.chat_backend.model.UserConversationDisplay;
 import com.randomchat.chat_backend.service.ConversationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class ConversationController {
     // ✅ Create or Save a conversation
     @PostMapping
     public ResponseEntity<Conversation> createConversation(@RequestBody Conversation conversation) {
+        System.out.println("inside get user..............................."+ conversation);
         Conversation savedConversation = conversationService.saveConversation(conversation);
         return ResponseEntity.ok(savedConversation);
     }
@@ -38,9 +40,9 @@ public class ConversationController {
 
     // ✅ Get all conversations for a specific user
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Conversation>> getUserConversations(@PathVariable String userId) {
-        List<Conversation> conversations = conversationService.getUserConversations(userId);
-        return ResponseEntity.ok(conversations);
+    public ResponseEntity<List<UserConversationDisplay>> getUserConversations(@PathVariable String userId) {
+        List<UserConversationDisplay> userConversationDisplays = conversationService.getUserConversations(userId);
+        return ResponseEntity.ok(userConversationDisplays);
     }
 
     // ✅ End a conversation (set endedAt timestamp)

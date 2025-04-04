@@ -17,8 +17,8 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long user1Id;      // First user in the conversation
-    private Long user2Id;      // Second user in the conversation
+    private String user1Id;      // First user in the conversation
+    private String user2Id;      // Second user in the conversation
 
     private LocalDateTime startedAt;    // Conversation start timestamp
     private LocalDateTime endedAt;      // (Optional) End timestamp

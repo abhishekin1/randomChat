@@ -21,15 +21,25 @@ public class User {
     private String location;
     private String status;
 
-    @Enumerated(EnumType.STRING)
-    private SuspectLevel suspectLevel;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private Integer suspectLevel = 100;
 
     private String bio;
     private String photoId;
     private LocalDateTime lastOnline;
     private String fcmToken;
 
-    public enum SuspectLevel {
-        GREEN, YELLOW, RED
-    }
 }

@@ -1,5 +1,6 @@
 package com.randomchat.chat_backend.model;
 
+import com.randomchat.chat_backend.Enums;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,12 +32,8 @@ public class Message {
     private LocalDateTime timeStamp;      // Message sent time
 
     @Enumerated(EnumType.STRING)
-    private MessageStatus status;         // SENT, DELIVERED, SEEN
+    private Enums.MessageStatus status;         // SENT, DELIVERED, SEEN
+    @Enumerated(EnumType.STRING)
+    private Enums.MessageType type;
 
-    // Embedded MessageStatus Enum
-    public enum MessageStatus {
-        SENT,           // Message sent
-        DELIVERED,      // Message delivered
-        SEEN            // Message seen
-    }
 }

@@ -19,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<User> findByGender(String gender);
 
     // ✅ Find users by suspect level
-    List<User> findBySuspectLevel(User.SuspectLevel suspectLevel);
+    List<User> findBySuspectLevel(Integer suspectLevel);
 
     // ✅ Find users by last online timestamp (for filtering active users)
     List<User> findByLastOnlineAfter(java.time.LocalDateTime timestamp);
