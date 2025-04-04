@@ -1,5 +1,6 @@
 package com.randomchat.chat_backend.model;
 
+import com.randomchat.chat_backend.Enums;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,15 +25,8 @@ public class Conversation {
     private LocalDateTime endedAt;      // (Optional) End timestamp
 
     @Enumerated(EnumType.STRING)
-    private TypingStatus typing;        // Who is typing: USER1, USER2, BOTH, NO
+    private Enums.TypingStatus typing;        // Who is typing: USER1, USER2, BOTH, NO
 
     private Long lastMessageId;         // ID of the last message
 
-    // Embedded Typing Enum
-    public enum TypingStatus {
-        USER1,      // First user is typing
-        USER2,      // Second user is typing
-        BOTH,       // Both are typing
-        NO          // No one is typing
-    }
 }

@@ -1,18 +1,14 @@
 package com.randomchat.chat_backend.service;
 
 import com.randomchat.chat_backend.Enums;
-import com.randomchat.chat_backend.Enums.MessageType;
 import com.randomchat.chat_backend.model.Conversation;
 import com.randomchat.chat_backend.model.Message;
 import com.randomchat.chat_backend.model.User;
 import com.randomchat.chat_backend.model.UserConversationDisplay;
 import com.randomchat.chat_backend.repository.ConversationRepository;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Array;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
