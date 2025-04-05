@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Native WebSocket STOMP Chat Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+  <h2>STOMP over Native WebSocket</h2>
+
+  <label>Sender ID: <input type="text" id="senderId" value="user1"></label><br>
+  <label>Receiver ID: <input type="text" id="receiverId" value="user2"></label><br>
+  <label>Message: <input type="text" id="message" value="Hello from native WS"></label><br><br>
+
+  <button onclick="connect()">Connect</button>
+  <button onclick="disconnect()">Disconnect</button>
+  <button onclick="sendMessage()">Send Message</button>
+
+  <h3>Console:</h3>
+  <pre id="console" style="background: #f1f1f1; padding: 10px; height: 200px; overflow-y: auto;"></pre>
+
+  <script>
+    let stompClient = null;
+
+    function log(message) {
+      const consoleElement = document.getElementById('console');
+      consoleElement.textContent += message + '\n';
+      consoleElement.scrollTop = consoleElement.scrollHeight;
+    }
+
+    function connect() {
+      stompClient = new StompJs.Client({
+        brokerURL: 'ws://localhost:8080/ws',
+        reconnectDelay: 5000,
+        onConnect: () => {
+          log("✅ Connected to WebSocket");
+
+          const currentUserId = document.getElementById('receiverId').value;
+
+        stompClient.subscribe(`/${currentUserId}/queue/messages`, message => {
+            log(`📥 Received: ${message.body}`);
+        });
+
+
+        },
+        onStompError: (frame) => {
+          log("❌ Broker reported error: " + frame.headers['message']);
+          log("Details: " + frame.body);
+        }
+      });
+
+      stompClient.activate();
+    }
+
+    function disconnect() {
+      if (stompClient) {
+        stompClient.deactivate();
+        log("🔌 Disconnected");
+      }
+    }
+
+    function sendMessage() {
+      const senderId = document.getElementById('senderId').value;
+      const receiverId = document.getElementById('receiverId').value;
+      const message = document.getElementById('message').value;
+
+      const messagePayload = {
+        senderId: senderId,
+        receiverId: receiverId,
+        conversationId: 1,
+        message: message,
+        objectUri: null,
+        referredMessageId: null,
+        reactEmojiSender: null,
+        reactEmojiReceiver: null,
+        timeStamp: new Date().toISOString(),
+        status: "SENT",
+        type: "TEXT"
+      };
+
+      stompClient.publish({
+        destination: "/app/chat.send",
+        body: JSON.stringify(messagePayload)
+      });
+
+      log("📤 Sent: " + JSON.stringify(messagePayload));
+    }
+  </script>
+</body>
+</html>

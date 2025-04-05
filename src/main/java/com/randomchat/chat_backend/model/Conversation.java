@@ -26,7 +26,4 @@ public class Conversation {
 
     @Enumerated(EnumType.STRING)
     private Enums.TypingStatus typing;        // Who is typing: USER1, USER2, BOTH, NO
-
-    private Long lastMessageId;         // ID of the last message
-
 }

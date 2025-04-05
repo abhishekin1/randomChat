@@ -21,20 +21,6 @@ public class User {
     private String location;
     private String status;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private Integer suspectLevel = 100;
 
     private String bio;

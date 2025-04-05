@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+
+  <title>STOMP WebSocket Tester</title>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    textarea, input { width: 100%; margin-bottom: 10px; }
+    #console { background: #f9f9f9; padding: 10px; height: 250px; overflow-y: auto; border: 1px solid #ccc; white-space: pre-wrap; }
+    button { margin-right: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>🧪 STOMP WebSocket Playground</h2>
+
+  <label>🔌 WebSocket URL:</label>
+  <input type="text" id="wsUrl" value="ws://localhost:8080/ws">
+
+  <label>📥 Subscribe Topic/Queue:</label>
+  <input type="text" id="subscribePath" value="/user/2/queue/messages">
+
+  <label>📤 Send Destination Path:</label>
+  <input type="text" id="destinationPath" value="/app/chat.send">
+
+  <label>📝 JSON Payload to Send:</label>
+  <textarea id="jsonPayload">{"senderId": "1", "receiverId": "2", "message":"Hello from native WS"}</textarea>
+
+  <div>
+    <button onclick="connect()">Connect</button>
+    <button onclick="subscribeToPath()">Subscribe</button>
+    <button onclick="sendMessage()">Send Message</button>
+    <button onclick="disconnect()">Disconnect</button>
+  </div>
+
+  <h3>📜 Console Log:</h3>
+  <pre id="console"></pre>
+
+  <script>
+    let stompClient = null;
+    let connected = false;
+
+    function log(msg, type = "log") {
+      const consoleEl = document.getElementById('console');
+      const prefix = type === "error" ? "❌ " : type === "success" ? "✅ " : "";
+      consoleEl.textContent += prefix + msg + '\n';
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function connect() {
+      const wsUrl = document.getElementById('wsUrl').value.trim();
+
+      if (!wsUrl) {
+        log("WebSocket URL is required!", "error");
+        return;
+      }
+
+      stompClient = new StompJs.Client({
+        brokerURL: wsUrl,
+        reconnectDelay: 5000,
+        onConnect: () => {
+          connected = true;
+          log("Connected to WebSocket!", "success");
+        },
+        onWebSocketError: (error) => {
+          log("WebSocket error: " + error.message, "error");
+        },
+        onStompError: (frame) => {
+          log("STOMP error: " + frame.headers['message'], "error");
+          log("Details: " + frame.body, "error");
+        },
+        onDisconnect: () => {
+          connected = false;
+          log("Disconnected from server.", "log");
+        }
+      });
+
+      stompClient.activate();
+    }
+
+    function subscribeToPath() {
+      const subscribePath = document.getElementById('subscribePath').value.trim();
+
+      if (!connected || !stompClient || !stompClient.connected) {
+        log("You must be connected before subscribing.", "error");
+        return;
+      }
+
+      if (!subscribePath) {
+        log("Subscribe path is required!", "error");
+        return;
+      }
+
+      try {
+        stompClient.subscribe(subscribePath, (message) => {
+          log("📩 Received:\n" + message.body);
+        });
+
+        log("Subscribed to: " + subscribePath, "success");
+      } catch (err) {
+        log("Failed to subscribe: " + err.message, "error");
+      }
+    }
+
+    function sendMessage() {
+      const destinationPath = document.getElementById('destinationPath').value.trim();
+      const payloadText = document.getElementById('jsonPayload').value;
+
+      if (!connected || !stompClient || !stompClient.connected) {
+        log("You must be connected before sending messages.", "error");
+        return;
+      }
+
+      if (!destinationPath) {
+        log("Destination path is required!", "error");
+        return;
+      }
+
+      try {
+        const parsedPayload = JSON.stringify(JSON.parse(payloadText)); // Validate & clean
+        stompClient.publish({
+          destination: destinationPath,
+          body: parsedPayload
+        });
+
+        log("📤 Sent to " + destinationPath + ":\n" + parsedPayload);
+      } catch (err) {
+        log("Invalid JSON payload: " + err.message, "error");
+      }
+    }
+
+    function disconnect() {
+      if (stompClient) {
+        try {
+          stompClient.deactivate();
+          connected = false;
+          log("Disconnected from WebSocket.", "log");
+        } catch (err) {
+          log("Error while disconnecting: " + err.message, "error");
+        }
+      } else {
+        log("Client not connected.", "error");
+      }
+    }
+  </script>
+
+</body>
+</html>
