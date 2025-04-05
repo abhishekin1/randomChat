@@ -39,13 +39,6 @@ public class MessageController {
         return ResponseEntity.ok(messages);
     }
 
-    // ✅ Get all messages received by a user
-    @GetMapping("/receiver/{receiverId}")
-    public ResponseEntity<List<Message>> getMessagesByReceiver(@PathVariable String receiverId) {
-        List<Message> messages = messageService.getMessagesByReceiver(receiverId);
-        return ResponseEntity.ok(messages);
-    }
-
     // ✅ Get messages by status (e.g., unread, delivered)
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Message>> getMessagesByStatus(@PathVariable String status) {
@@ -57,16 +50,6 @@ public class MessageController {
     @GetMapping("/referred/{referredMessageId}")
     public ResponseEntity<List<Message>> getMessagesByReferredMessage(@PathVariable Long referredMessageId) {
         List<Message> messages = messageService.getMessagesByReferredMessage(referredMessageId);
-        return ResponseEntity.ok(messages);
-    }
-
-    // ✅ Get messages exchanged between two users
-    @GetMapping("/between/{userId1}/{userId2}")
-    public ResponseEntity<List<Message>> getMessagesBetweenUsers(
-            @PathVariable String userId1, 
-            @PathVariable String userId2
-    ) {
-        List<Message> messages = messageService.getMessagesBetweenUsers(userId1, userId2);
         return ResponseEntity.ok(messages);
     }
 

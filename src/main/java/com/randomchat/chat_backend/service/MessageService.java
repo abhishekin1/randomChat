@@ -29,10 +29,6 @@ public class MessageService {
         return messageRepository.findBySenderId(senderId);
     }
 
-    // ✅ Get all messages received by a user
-    public List<Message> getMessagesByReceiver(String receiverId) {
-        return messageRepository.findByReceiverId(receiverId);
-    }
 
     // ✅ Get messages by status (e.g., unread, delivered)
     public List<Message> getMessagesByStatus(String status) {
@@ -44,10 +40,6 @@ public class MessageService {
         return messageRepository.findByReferredMessageId(referredMessageId);
     }
 
-    // ✅ Get messages exchanged between two users
-    public List<Message> getMessagesBetweenUsers(String userId1, String userId2) {
-        return messageRepository.findMessagesBetweenUsers(userId1, userId2);
-    }
 
     // ✅ Get the latest message in a conversation
     public Optional<Message> getLatestMessageInConversation(Long conversationId) {
