@@ -24,5 +24,4 @@ public class UserConversationDisplay {
     @Enumerated(EnumType.STRING)
     private Enums.MessageType messageType;
     private Boolean isTyping;
-
 }

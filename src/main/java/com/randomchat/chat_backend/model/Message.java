@@ -20,17 +20,12 @@ public class Message {
 
     private Long conversationId;          // ID of the conversation
     private String senderId;                // ID of the sender
-    private String receiverId;              // ID of the receiver
-
     private String message;               // Message content
     private String objectUri;             // URI for media (if any)
     private Long referredMessageId;       // ID of the referred message
-
-    private Long reactEmojiSender;        // ID of the user reacting with an emoji
-    private Long reactEmojiReceiver;      // ID of the user receiving the emoji
-
+    private String reactEmojiSender;    // ID of the user reacting with an emoji
+    private String reactEmojiReceiver;
     private LocalDateTime timeStamp;      // Message sent time
-
     @Enumerated(EnumType.STRING)
     private Enums.MessageStatus status;         // SENT, DELIVERED, SEEN
     @Enumerated(EnumType.STRING)
