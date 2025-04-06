@@ -14,7 +14,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class UserConversationDisplay {
     private Long conversationId;
-    private String userName;
+    private String friendUserName;
+    private String friendUserId;
     private String photoUrl;
     private String lastMessage;
     private Boolean isByYou;

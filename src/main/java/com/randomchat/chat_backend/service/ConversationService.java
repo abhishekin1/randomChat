@@ -47,8 +47,8 @@ public class ConversationService {
             long conversationId = c.getId();
 
             User friendUser = Objects.equals(c.getUser1Id(), userId) ?  userService.getUserByDeviceId(c.getUser2Id()).get() : userService.getUserByDeviceId(c.getUser1Id()).get();
-            String friendId = friendUser.getDeviceId();
-            String userName = friendUser.getName();
+            String friendUserId = friendUser.getDeviceId();
+            String friendUserName = friendUser.getName();
             String photoUrl = friendUser.getPhotoId();
 
             Message latestMessage = messageService.getLatestMessageInConversation(conversationId).get();
@@ -58,10 +58,10 @@ public class ConversationService {
             LocalDateTime lastMessageTime = latestMessage.getTimeStamp();
             Enums.MessageType messageType = latestMessage.getType();
             Boolean isTyping = Enums.TypingStatus.BOTH.equals(c.getTyping())
-                                || (Enums.TypingStatus.USER1.equals(c.getTyping()) && friendId.equals(c.getUser1Id()))
-                                || (Enums.TypingStatus.USER2.equals(c.getTyping()) && friendId.equals(c.getUser2Id()));
+                                || (Enums.TypingStatus.USER1.equals(c.getTyping()) && friendUserId.equals(c.getUser1Id()))
+                                || (Enums.TypingStatus.USER2.equals(c.getTyping()) && friendUserId.equals(c.getUser2Id()));
 
-            userConversationDisplays.add(new UserConversationDisplay(conversationId, userName, photoUrl, lastMessage, isByYou, messageStatus, lastMessageTime, messageType, isTyping));
+            userConversationDisplays.add(new UserConversationDisplay(conversationId, friendUserName, friendUserId,photoUrl, lastMessage, isByYou, messageStatus, lastMessageTime, messageType, isTyping));
         }
         return  userConversationDisplays;
     }
