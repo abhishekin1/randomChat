@@ -25,4 +25,11 @@ public class UserConversationDisplay {
     @Enumerated(EnumType.STRING)
     private Enums.MessageType messageType;
     private Boolean isTyping;
+
+    public UserConversationDisplay(Long conversationId, String friendUserName, String friendUserId, String photoUrl) {
+        this.conversationId = conversationId;
+        this.friendUserName = friendUserName;
+        this.friendUserId = friendUserId;
+        this.photoUrl = photoUrl;
+    }
 }
