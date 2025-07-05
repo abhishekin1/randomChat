@@ -3,6 +3,7 @@ package com.randomchat.chat_backend.controller;
 import com.randomchat.chat_backend.model.Message;
 import com.randomchat.chat_backend.model.User;
 import com.randomchat.chat_backend.model.UserConversationDisplay;
+import com.randomchat.chat_backend.service.FriendshipService;
 import com.randomchat.chat_backend.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,8 @@ public class RandomChatController {
     private final SimpMessagingTemplate messagingTemplate;
     @Autowired
     private final UserService userService;
-
+    @Autowired
+    private final FriendshipService friendshipService;
     private final Queue<String> waitingQueue = new LinkedList<>();
 
     @MessageMapping("/chat.random")
@@ -33,7 +35,9 @@ public class RandomChatController {
         synchronized (waitingQueue) {
             if (!waitingQueue.isEmpty()) {
                 String friendUserId = waitingQueue.poll();
-                if (friendUserId.equals(userId)) {
+                if (friendUserId.equals(userId)
+//                        || friendshipService.getFriendshipBetween(userId,friendUserId).isPresent()
+                ) {
                     randomChat(userId);
                     return;
                 }
@@ -76,6 +80,7 @@ public class RandomChatController {
         synchronized (waitingQueue) {
             waitingQueue.remove(userId);
         }
+        messagingTemplate.convertAndSend("/topic/room/random/disconnect_watch"+userId, true);
         System.out.println(" ---------------- waitingqueue size: " + waitingQueue.size());
     }
 }
