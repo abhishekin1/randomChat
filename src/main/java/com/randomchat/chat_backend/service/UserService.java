@@ -48,6 +48,6 @@ public class UserService {
     }
 
     public List<User> getUsersByIds(List<String> friendIds) {
-        return userRepository.findByDeviceIdIn(friendIds);
+        return userRepository.findByUsernameIn(friendIds);
     }
 }

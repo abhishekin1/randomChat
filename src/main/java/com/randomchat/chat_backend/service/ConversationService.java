@@ -47,7 +47,7 @@ public class ConversationService {
             long conversationId = c.getId();
 
             User friendUser = Objects.equals(c.getUser1Id(), userId) ?  userService.getUserByDeviceId(c.getUser2Id()).get() : userService.getUserByDeviceId(c.getUser1Id()).get();
-            String friendUserId = friendUser.getDeviceId();
+            String friendUserId = friendUser.getUsername();
             String friendUserName = friendUser.getName();
             String photoUrl = friendUser.getPhotoId();
 

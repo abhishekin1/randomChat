@@ -83,7 +83,7 @@ public class FriendshipService {
             long friendshipId = f.getId();
 
             User friendUser = Objects.equals(f.getUserId(), userId) ?  userService.getUserByDeviceId(f.getFriendId()).get() : userService.getUserByDeviceId(f.getUserId()).get();
-            String friendUserId = friendUser.getDeviceId();
+            String friendUserId = friendUser.getUsername();
             String friendUserName = friendUser.getName();
             String photoUrl = friendUser.getPhotoId();
 

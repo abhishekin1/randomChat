@@ -50,13 +50,13 @@ public class RandomChatController {
                 UserConversationDisplay toUser = new UserConversationDisplay(
                         conversationId,
                         friend.getName(),
-                        friend.getDeviceId(),
+                        friend.getUsername(),
                         friend.getPhotoId()
                 );
                 UserConversationDisplay toFriend = new UserConversationDisplay(
                         conversationId,
                         user.getName(),
-                        user.getDeviceId(),
+                        user.getUsername(),
                         user.getPhotoId()
                 );
 

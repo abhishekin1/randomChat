@@ -5,10 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
+    Optional<User> findByUsername(String username);
+    
     // ✅ Find users by status
     List<User> findByStatus(String status);
 
@@ -25,6 +28,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<User> findByLastOnlineAfter(java.time.LocalDateTime timestamp);
 
     // Replace findByIdIn with:
-    List<User> findByDeviceIdIn(List<String> deviceIds);
+    List<User> findByUsernameIn(List<String> usernames);
 
 }

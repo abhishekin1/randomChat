@@ -1,20 +1,29 @@
 package com.randomchat.chat_backend.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Builder
 @Table(name = "users")
-public class User {
+public class User implements UserDetails{
 
     @Id
-    private String deviceId;
+    private String username;
+    private String password;
 
     private String name;
     private String gender;
@@ -27,5 +36,12 @@ public class User {
     private String photoId;
     private LocalDateTime lastOnline;
     private String fcmToken;
+
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
 
 }
