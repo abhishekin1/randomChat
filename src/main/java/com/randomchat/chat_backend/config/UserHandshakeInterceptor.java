@@ -1,5 +1,6 @@
 package com.randomchat.chat_backend.config;
 
+import com.randomchat.chat_backend.security.AuthUtil;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.socket.WebSocketHandler;
@@ -9,6 +10,12 @@ import java.util.Map;
 
 public class UserHandshakeInterceptor implements HandshakeInterceptor {
 
+    private final AuthUtil authUtil;
+
+    public UserHandshakeInterceptor(AuthUtil authUtil) {
+        this.authUtil = authUtil;
+    }
+
     @Override
     public boolean beforeHandshake(
             ServerHttpRequest request,
@@ -16,20 +23,30 @@ public class UserHandshakeInterceptor implements HandshakeInterceptor {
             WebSocketHandler wsHandler,
             Map<String, Object> attributes) throws Exception {
 
-        String userId = null;
-        String query = request.getURI().getQuery(); // "userId=abc123"
-        if (query != null && query.contains("userId=")) {
+        String token = null;
+        String query = request.getURI().getQuery(); // "token=..."
+        if (query != null) {
             for (String param : query.split("&")) {
-                if (param.startsWith("userId=")) {
-                    userId = param.substring("userId=".length());
+                if (param.startsWith("token=")) {
+                    token = param.substring("token=".length());
+                    break;
                 }
             }
         }
 
-        if (userId != null && !userId.isEmpty()) {
-            attributes.put("userId", userId); // stored in WebSocket session
+        if (token != null && !token.isEmpty()) {
+            try {
+                String userId = authUtil.getUsernameFromToken(token);
+                if (userId != null && !userId.isEmpty()) {
+                    attributes.put("userId", userId); // stored in WebSocket session
+                    return true;
+                }
+            } catch (Exception e) {
+                // Token invalid
+                return false;
+            }
         }
-        return true;
+        return false; // Reject handshake if no valid token found
     }
 
     @Override

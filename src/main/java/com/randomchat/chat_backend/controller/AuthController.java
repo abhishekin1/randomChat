@@ -3,7 +3,9 @@ package com.randomchat.chat_backend.controller;
 
 import com.randomchat.chat_backend.dto.LoginRequestDto;
 import com.randomchat.chat_backend.dto.LoginResponseDto;
+import com.randomchat.chat_backend.dto.SignupRequestDto;
 import com.randomchat.chat_backend.security.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody LoginRequestDto signupRequestDto) {
+    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequestDto signupRequestDto) {
 
             LoginResponseDto response = authService.signup(signupRequestDto);
             return ResponseEntity.ok(response);

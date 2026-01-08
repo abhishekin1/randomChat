@@ -27,16 +27,8 @@ public class UserService {
         return userRepository.findById(deviceId);
     }
 
-    // ✅ Find users by status
-    public List<User> getUsersByStatus(String status) {
-        return userRepository.findByStatus(status);
-    }
 
-    // ✅ Find recently active users (e.g., in the last 10 minutes)
-    public List<User> getRecentlyActiveUsers() {
-        LocalDateTime tenMinutesAgo = LocalDateTime.now().minusMinutes(10);
-        return userRepository.findByLastOnlineAfter(tenMinutesAgo);
-    }
+
 
     // ✅ Delete user by ID
     public void deleteUser(String deviceId) {

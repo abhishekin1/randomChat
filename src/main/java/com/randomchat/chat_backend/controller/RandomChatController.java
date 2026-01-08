@@ -10,10 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -33,8 +33,9 @@ public class RandomChatController {
     private final Queue<String> waitingQueue = new ConcurrentLinkedQueue<>();
 
     @MessageMapping("/chat.random")
-    public void randomChat(@Payload String userId) {
-        userId = userId.replaceAll("^\"+|\"+$", "");
+    public void randomChat(SimpMessageHeaderAccessor headerAccessor) {
+        String userId = (String) headerAccessor.getSessionAttributes().get("userId");
+        if (userId == null) return;
         
         String friendUserId = waitingQueue.poll();
         
@@ -65,13 +66,13 @@ public class RandomChatController {
                     conversationId,
                     friend.getName(),
                     friend.getUsername(),
-                    friend.getPhotoId()
+                    friend.getPhotoUrl()
             );
             UserConversationDisplay toFriend = new UserConversationDisplay(
                     conversationId,
                     user.getName(),
                     user.getUsername(),
-                    user.getPhotoId()
+                    user.getPhotoUrl()
             );
 
             messagingTemplate.convertAndSend("/topic/room/random/" + userId, toUser);
@@ -80,7 +81,11 @@ public class RandomChatController {
     }
 
     @MessageMapping("/chat.random.send")
-    public void handleChatMessage(@Payload Message message) {
+    public void handleChatMessage(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
+        String userId = (String) headerAccessor.getSessionAttributes().get("userId");
+        if (userId != null) {
+            message.setSenderId(userId);
+        }
         String topic = "/topic/room/" + message.getSenderId() + "-" + message.getConversationId();
         messagingTemplate.convertAndSend(topic, message);
     }
