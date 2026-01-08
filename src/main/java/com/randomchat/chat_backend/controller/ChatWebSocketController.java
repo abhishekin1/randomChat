@@ -3,6 +3,7 @@ package com.randomchat.chat_backend.controller;
 import com.randomchat.chat_backend.model.Message;
 import com.randomchat.chat_backend.model.TypingMessage;
 import com.randomchat.chat_backend.model.OnlineStatusMessage;
+import com.randomchat.chat_backend.model.WebSocketEvent;
 import com.randomchat.chat_backend.service.MessageService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +29,12 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat.send")
     public void handleChatMessage(@Payload Message message) {
-        System.out.println("-----------------------i am inside websocket /chat.send");
+        // Asynchronously save the message so it doesn't block the WebSocket thread
         messageService.saveMessage(message);
+        
         String topic = "/topic/room/" + message.getSenderId() + "-" + message.getConversationId();
-        messagingTemplate.convertAndSend(topic, message);
+        WebSocketEvent<Message> event = new WebSocketEvent<>("MESSAGE", message);
+        messagingTemplate.convertAndSend(topic, event);
     }
 
     @MessageMapping("/chat.typing")
@@ -44,7 +47,8 @@ public class ChatWebSocketController {
         } else {
             typingStatusMap.remove(room);
         }
-        messagingTemplate.convertAndSend(topic, message);
+        WebSocketEvent<TypingMessage> event = new WebSocketEvent<>("TYPING", message);
+        messagingTemplate.convertAndSend(topic, event);
     }
 
     @MessageMapping("/chat.online")
@@ -65,31 +69,35 @@ public class ChatWebSocketController {
         } else {
             onlineStatusMap.remove(room);
         }
-        messagingTemplate.convertAndSend(topic, message);
+        WebSocketEvent<OnlineStatusMessage> event = new WebSocketEvent<>("ONLINE_STATUS", message);
+        messagingTemplate.convertAndSend(topic, event);
     }
 
     @MessageMapping("/chat.user.status")
     public void sendCurrentUserStatus(@Payload OnlineStatusMessage request) {
         String room = request.getSenderId() + "-" + request.getConversationId();
         String topic = "/topic/room/" + room;
+        
         OnlineStatusMessage onlineStatus = new OnlineStatusMessage(request.getSenderId(), request.getConversationId(), onlineStatusMap.containsKey(room));
+        WebSocketEvent<OnlineStatusMessage> onlineEvent = new WebSocketEvent<>("ONLINE_STATUS", onlineStatus);
+        messagingTemplate.convertAndSend(topic, onlineEvent);
+
         TypingMessage typingStatus = new TypingMessage(request.getSenderId(), request.getConversationId(), typingStatusMap.containsKey(room));
-        messagingTemplate.convertAndSend(topic, onlineStatus);
-        messagingTemplate.convertAndSend(topic, typingStatus);
+        WebSocketEvent<TypingMessage> typingEvent = new WebSocketEvent<>("TYPING", typingStatus);
+        messagingTemplate.convertAndSend(topic, typingEvent);
     }
 
     public void handleDisconnectCleanup(String userId, String conversationId) {
         String room =  userId + "-" + conversationId;
         if (typingStatusMap.remove(room) != null) {
             TypingMessage msg = new TypingMessage(userId, conversationId, false);
-            messagingTemplate.convertAndSend("/topic/room/" + room, msg);
+            WebSocketEvent<TypingMessage> event = new WebSocketEvent<>("TYPING", msg);
+            messagingTemplate.convertAndSend("/topic/room/" + room, event);
         }
         if (onlineStatusMap.remove(room) != null) {
             OnlineStatusMessage msg = new OnlineStatusMessage(userId, conversationId, false);
-            messagingTemplate.convertAndSend("/topic/room/" + room, msg);
+            WebSocketEvent<OnlineStatusMessage> event = new WebSocketEvent<>("ONLINE_STATUS", msg);
+            messagingTemplate.convertAndSend("/topic/room/" + room, event);
         }
-        System.out.println("-------------------🔌 WebSocket disconnect: userId=" + userId + ", conversationId=" + conversationId);
-        System.out.print("-------------------typingStatusMap size: " + typingStatusMap.size());
-        System.out.println("  onlineStatusMap size: " + onlineStatusMap.size());
     }
 }

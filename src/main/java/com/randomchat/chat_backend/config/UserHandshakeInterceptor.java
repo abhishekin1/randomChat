@@ -28,7 +28,6 @@ public class UserHandshakeInterceptor implements HandshakeInterceptor {
 
         if (userId != null && !userId.isEmpty()) {
             attributes.put("userId", userId); // stored in WebSocket session
-            System.out.println("Handshake - userId stored: " + userId);
         }
         return true;
     }

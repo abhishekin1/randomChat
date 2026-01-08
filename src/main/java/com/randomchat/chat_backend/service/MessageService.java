@@ -3,10 +3,12 @@ package com.randomchat.chat_backend.service;
 import com.randomchat.chat_backend.model.Message;
 import com.randomchat.chat_backend.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -14,9 +16,10 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
 
-    // ✅ Save a message
-    public Message saveMessage(Message message) {
-        return messageRepository.save(message);
+    // ✅ Save a message asynchronously
+    @Async
+    public CompletableFuture<Message> saveMessage(Message message) {
+        return CompletableFuture.completedFuture(messageRepository.save(message));
     }
 
     // ✅ Get all messages in a conversation (sorted by timestamp)

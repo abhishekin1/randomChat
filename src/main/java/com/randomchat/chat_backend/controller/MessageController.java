@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/messages")
@@ -20,9 +21,9 @@ public class MessageController {
 
     // ✅ Save a message
     @PostMapping
-    public ResponseEntity<Message> saveMessage(@RequestBody Message message) {
-        Message savedMessage = messageService.saveMessage(message);
-        return ResponseEntity.ok(savedMessage);
+    public CompletableFuture<ResponseEntity<Message>> saveMessage(@RequestBody Message message) {
+        return messageService.saveMessage(message)
+                .thenApply(ResponseEntity::ok);
     }
 
     // ✅ Get all messages in a conversation (sorted by timestamp)
