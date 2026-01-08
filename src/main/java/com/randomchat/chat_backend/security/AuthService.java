@@ -3,6 +3,7 @@ package com.randomchat.chat_backend.security;
 
 import com.randomchat.chat_backend.dto.LoginRequestDto;
 import com.randomchat.chat_backend.dto.LoginResponseDto;
+import com.randomchat.chat_backend.dto.SignupRequestDto;
 import com.randomchat.chat_backend.model.User;
 import com.randomchat.chat_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class AuthService {
         return new LoginResponseDto(token, user.getUsername());
     }
 
-    public LoginResponseDto signup(final LoginRequestDto signupRequestDto) {
+    public LoginResponseDto signup(final SignupRequestDto signupRequestDto) {
         User user = userRepository.findByUsername(signupRequestDto.getUsername()).orElse(null);
         if(user != null){
             log.info("user already exist: {}", user);
@@ -46,27 +47,16 @@ public class AuthService {
         user = userRepository.save(User.builder()
                 .username(signupRequestDto.getUsername())
                 .password(passwordEncoder.encode(signupRequestDto.getPassword()))
+                .name(signupRequestDto.getName())
+                .email(signupRequestDto.getEmail())
+                .gender(signupRequestDto.getGender())
+                .bio(signupRequestDto.getBio())
+                .photoUrl(signupRequestDto.getPhotoUrl())
                 .build()
         );
-        return login(signupRequestDto);
-
+        
+        // Automatically login after signup
+        String token = authUtil.generateAccessToken(user);
+        return new LoginResponseDto(token, user.getUsername());
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

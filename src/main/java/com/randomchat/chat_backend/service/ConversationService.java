@@ -49,7 +49,7 @@ public class ConversationService {
             User friendUser = Objects.equals(c.getUser1Id(), userId) ?  userService.getUserByDeviceId(c.getUser2Id()).get() : userService.getUserByDeviceId(c.getUser1Id()).get();
             String friendUserId = friendUser.getUsername();
             String friendUserName = friendUser.getName();
-            String photoUrl = friendUser.getPhotoId();
+            String photoUrl = friendUser.getPhotoUrl();
 
             Message latestMessage = messageService.getLatestMessageInConversation(conversationId).get();
             String lastMessage = latestMessage.getMessage();

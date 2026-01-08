@@ -28,7 +28,11 @@ public class ChatWebSocketController {
     private final Map<String, Long> onlineStatusMap = new ConcurrentHashMap<>();
 
     @MessageMapping("/chat.send")
-    public void handleChatMessage(@Payload Message message) {
+    public void handleChatMessage(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
+        String userId = (String) headerAccessor.getSessionAttributes().get("userId");
+        if (userId != null) {
+            message.setSenderId(userId);
+        }
         // Asynchronously save the message so it doesn't block the WebSocket thread
         messageService.saveMessage(message);
         
@@ -38,7 +42,11 @@ public class ChatWebSocketController {
     }
 
     @MessageMapping("/chat.typing")
-    public void handleTypingStatus(@Payload TypingMessage message) {
+    public void handleTypingStatus(@Payload TypingMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        String userId = (String) headerAccessor.getSessionAttributes().get("userId");
+        if (userId != null) {
+            message.setSenderId(userId);
+        }
         String room = message.getSenderId() + "-" + message.getConversationId();
         String topic = "/topic/room/" + room;
 
@@ -53,9 +61,12 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat.online")
     public void handleOnlineStatus(@Payload OnlineStatusMessage message,
-                                   org.springframework.messaging.Message<?> rawMessage) {
+                                   SimpMessageHeaderAccessor accessor) {
 
-        SimpMessageHeaderAccessor accessor = SimpMessageHeaderAccessor.wrap(rawMessage);
+        String userId = (String) accessor.getSessionAttributes().get("userId");
+        if (userId != null) {
+            message.setSenderId(userId);
+        }
 
         Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
         if (sessionAttributes != null && !sessionAttributes.containsKey("conversationId")) {
@@ -74,7 +85,11 @@ public class ChatWebSocketController {
     }
 
     @MessageMapping("/chat.user.status")
-    public void sendCurrentUserStatus(@Payload OnlineStatusMessage request) {
+    public void sendCurrentUserStatus(@Payload OnlineStatusMessage request, SimpMessageHeaderAccessor headerAccessor) {
+        String userId = (String) headerAccessor.getSessionAttributes().get("userId");
+        if (userId != null) {
+            request.setSenderId(userId);
+        }
         String room = request.getSenderId() + "-" + request.getConversationId();
         String topic = "/topic/room/" + room;
         

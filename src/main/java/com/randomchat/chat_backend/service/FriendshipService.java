@@ -85,7 +85,7 @@ public class FriendshipService {
             User friendUser = Objects.equals(f.getUserId(), userId) ?  userService.getUserByDeviceId(f.getFriendId()).get() : userService.getUserByDeviceId(f.getUserId()).get();
             String friendUserId = friendUser.getUsername();
             String friendUserName = friendUser.getName();
-            String photoUrl = friendUser.getPhotoId();
+            String photoUrl = friendUser.getPhotoUrl();
 
             Optional<Message> optionalMessage = messageService.getLatestMessageInConversation(friendshipId);
             String lastMessage = null;
