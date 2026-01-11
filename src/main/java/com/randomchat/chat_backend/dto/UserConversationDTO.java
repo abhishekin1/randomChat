@@ -1,4 +1,4 @@
-package com.randomchat.chat_backend.model;
+package com.randomchat.chat_backend.dto;
 
 import com.randomchat.chat_backend.Enums;
 import jakarta.persistence.EnumType;
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserConversationDisplay {
+public class UserConversationDTO {
     private Long conversationId;
     private String friendUserName;
     private String friendUserId;
@@ -26,7 +26,7 @@ public class UserConversationDisplay {
     private Enums.MessageType messageType;
     private Boolean isTyping;
 
-    public UserConversationDisplay(Long conversationId, String friendUserName, String friendUserId, String photoUrl) {
+    public UserConversationDTO(Long conversationId, String friendUserName, String friendUserId, String photoUrl) {
         this.conversationId = conversationId;
         this.friendUserName = friendUserName;
         this.friendUserId = friendUserId;

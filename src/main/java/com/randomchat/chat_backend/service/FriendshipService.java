@@ -1,13 +1,11 @@
 package com.randomchat.chat_backend.service;
 
-import com.randomchat.chat_backend.Enums;
 import com.randomchat.chat_backend.model.*;
 import com.randomchat.chat_backend.repository.FriendshipRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -16,22 +14,14 @@ public class FriendshipService {
     private final FriendshipRepository friendshipRepository;
     @Autowired
     private UserService userService;
-    @Autowired
-    private MessageService messageService;
 
     public FriendshipService(FriendshipRepository friendshipRepository) {
         this.friendshipRepository = friendshipRepository;
     }
 
-
-
-
     // ✅ Create or Save a friendship
     public Friendship saveFriendship(Friendship friendship) {
         return friendshipRepository.save(friendship);
-    }
-    public List<Friendship> getAllFriendships() {
-        return friendshipRepository.findAll();
     }
 
     public List<User> getRequestsToBeAccepted(String myUserId) {
@@ -73,47 +63,5 @@ public class FriendshipService {
     public Optional<Friendship> getFriendshipBetween(String userId, String friendId) {
         return friendshipRepository.findBetweenUsers(userId, friendId);
     }
-
-
-    // ✅ Get all conversations by user (either as user1 or user2)
-    public List<UserConversationDisplay> getUserConversations(String userId) {
-        List<Friendship> friendships = friendshipRepository.findAllAcceptedFriendships(userId);
-        List<UserConversationDisplay> userConversationDisplays = new ArrayList<>();
-        for(Friendship f :  friendships) {
-            long friendshipId = f.getId();
-
-            User friendUser = Objects.equals(f.getUserId(), userId) ?  userService.getUserByDeviceId(f.getFriendId()).get() : userService.getUserByDeviceId(f.getUserId()).get();
-            String friendUserId = friendUser.getUsername();
-            String friendUserName = friendUser.getName();
-            String photoUrl = friendUser.getPhotoUrl();
-
-            Optional<Message> optionalMessage = messageService.getLatestMessageInConversation(friendshipId);
-            String lastMessage = null;
-            Boolean isByYou = null;
-            Enums.MessageStatus messageStatus = null;
-            LocalDateTime lastMessageTime = null;
-            Enums.MessageType messageType = null;
-
-            if (optionalMessage.isPresent()) {
-                Message latestMessage = optionalMessage.get();
-                lastMessage = latestMessage.getMessage();
-                isByYou = latestMessage.getSenderId().equals(userId);
-                messageStatus = latestMessage.getStatus();
-                lastMessageTime = latestMessage.getTimeStamp();
-                messageType = latestMessage.getType();
-            }
-
-            userConversationDisplays.add(new UserConversationDisplay(friendshipId, friendUserName, friendUserId,photoUrl, lastMessage, isByYou, messageStatus, lastMessageTime, messageType, null));
-        }
-        userConversationDisplays.sort(
-                Comparator.comparing(
-                        UserConversationDisplay::getLastMessageTime,
-                        Comparator.nullsLast(Comparator.reverseOrder())
-                )
-        );
-
-        return  userConversationDisplays;
-    }
-
 
 }

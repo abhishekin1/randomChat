@@ -1,9 +1,9 @@
 package com.randomchat.chat_backend.controller;
 
+import com.randomchat.chat_backend.dto.OnlineStatusDTO;
+import com.randomchat.chat_backend.dto.TypingStatusDTO;
+import com.randomchat.chat_backend.dto.WebSocketEventDTO;
 import com.randomchat.chat_backend.model.Message;
-import com.randomchat.chat_backend.model.TypingMessage;
-import com.randomchat.chat_backend.model.OnlineStatusMessage;
-import com.randomchat.chat_backend.model.WebSocketEvent;
 import com.randomchat.chat_backend.service.MessageService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Controller
@@ -24,8 +25,8 @@ public class ChatWebSocketController {
     @Autowired
     private MessageService messageService;
 
-    private final Map<String, Long> typingStatusMap = new ConcurrentHashMap<>();
-    private final Map<String, Long> onlineStatusMap = new ConcurrentHashMap<>();
+    // Use a Set to track online users globally.
+    private final Set<String> onlineUsers = ConcurrentHashMap.newKeySet();
 
     @MessageMapping("/chat.send")
     public void handleChatMessage(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
@@ -33,16 +34,16 @@ public class ChatWebSocketController {
         if (userId != null) {
             message.setSenderId(userId);
         }
-        // Asynchronously save the message so it doesn't block the WebSocket thread
+        // Asynchronously save the message
         messageService.saveMessage(message);
         
         String topic = "/topic/room/" + message.getSenderId() + "-" + message.getConversationId();
-        WebSocketEvent<Message> event = new WebSocketEvent<>("MESSAGE", message);
+        WebSocketEventDTO<Message> event = new WebSocketEventDTO<>("MESSAGE", message);
         messagingTemplate.convertAndSend(topic, event);
     }
 
     @MessageMapping("/chat.typing")
-    public void handleTypingStatus(@Payload TypingMessage message, SimpMessageHeaderAccessor headerAccessor) {
+    public void handleTypingStatus(@Payload TypingStatusDTO message, SimpMessageHeaderAccessor headerAccessor) {
         String userId = (String) headerAccessor.getSessionAttributes().get("userId");
         if (userId != null) {
             message.setSenderId(userId);
@@ -50,69 +51,64 @@ public class ChatWebSocketController {
         String room = message.getSenderId() + "-" + message.getConversationId();
         String topic = "/topic/room/" + room;
 
-        if (message.isTyping()) {
-            typingStatusMap.put(room, System.currentTimeMillis());
-        } else {
-            typingStatusMap.remove(room);
-        }
-        WebSocketEvent<TypingMessage> event = new WebSocketEvent<>("TYPING", message);
+        // Fire-and-forget
+        WebSocketEventDTO<TypingStatusDTO> event = new WebSocketEventDTO<>("TYPING", message);
         messagingTemplate.convertAndSend(topic, event);
     }
 
     @MessageMapping("/chat.online")
-    public void handleOnlineStatus(@Payload OnlineStatusMessage message,
+    public void handleOnlineStatus(@Payload OnlineStatusDTO message,
                                    SimpMessageHeaderAccessor accessor) {
 
         String userId = (String) accessor.getSessionAttributes().get("userId");
         if (userId != null) {
             message.setSenderId(userId);
+            onlineUsers.add(userId);
         }
 
         Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
         if (sessionAttributes != null && !sessionAttributes.containsKey("conversationId")) {
             sessionAttributes.put("conversationId", message.getConversationId());
         }
+        
         String room = message.getSenderId() + "-" + message.getConversationId();
         String topic = "/topic/room/" + room;
 
-        if (message.isOnline()) {
-            onlineStatusMap.put(room, System.currentTimeMillis());
-        } else {
-            onlineStatusMap.remove(room);
-        }
-        WebSocketEvent<OnlineStatusMessage> event = new WebSocketEvent<>("ONLINE_STATUS", message);
+        WebSocketEventDTO<OnlineStatusDTO> event = new WebSocketEventDTO<>("ONLINE_STATUS", message);
         messagingTemplate.convertAndSend(topic, event);
     }
 
     @MessageMapping("/chat.user.status")
-    public void sendCurrentUserStatus(@Payload OnlineStatusMessage request, SimpMessageHeaderAccessor headerAccessor) {
+    public void sendCurrentUserStatus(@Payload OnlineStatusDTO request, SimpMessageHeaderAccessor headerAccessor) {
         String userId = (String) headerAccessor.getSessionAttributes().get("userId");
         if (userId != null) {
             request.setSenderId(userId);
         }
         String room = request.getSenderId() + "-" + request.getConversationId();
         String topic = "/topic/room/" + room;
-        
-        OnlineStatusMessage onlineStatus = new OnlineStatusMessage(request.getSenderId(), request.getConversationId(), onlineStatusMap.containsKey(room));
-        WebSocketEvent<OnlineStatusMessage> onlineEvent = new WebSocketEvent<>("ONLINE_STATUS", onlineStatus);
-        messagingTemplate.convertAndSend(topic, onlineEvent);
 
-        TypingMessage typingStatus = new TypingMessage(request.getSenderId(), request.getConversationId(), typingStatusMap.containsKey(room));
-        WebSocketEvent<TypingMessage> typingEvent = new WebSocketEvent<>("TYPING", typingStatus);
-        messagingTemplate.convertAndSend(topic, typingEvent);
+        boolean isOnline = isUserOnline(request.getSenderId());
+
+        OnlineStatusDTO onlineStatus = new OnlineStatusDTO(request.getSenderId(), request.getConversationId(), isOnline);
+        WebSocketEventDTO<OnlineStatusDTO> onlineEvent = new WebSocketEventDTO<>("ONLINE_STATUS", onlineStatus);
+        messagingTemplate.convertAndSend(topic, onlineEvent);
     }
 
     public void handleDisconnectCleanup(String userId, String conversationId) {
-        String room =  userId + "-" + conversationId;
-        if (typingStatusMap.remove(room) != null) {
-            TypingMessage msg = new TypingMessage(userId, conversationId, false);
-            WebSocketEvent<TypingMessage> event = new WebSocketEvent<>("TYPING", msg);
+        if (userId != null) {
+            onlineUsers.remove(userId);
+        }
+
+        if (userId != null && conversationId != null) {
+            String room =  userId + "-" + conversationId;
+            
+            OnlineStatusDTO msg = new OnlineStatusDTO(userId, conversationId, false);
+            WebSocketEventDTO<OnlineStatusDTO> event = new WebSocketEventDTO<>("ONLINE_STATUS", msg);
             messagingTemplate.convertAndSend("/topic/room/" + room, event);
         }
-        if (onlineStatusMap.remove(room) != null) {
-            OnlineStatusMessage msg = new OnlineStatusMessage(userId, conversationId, false);
-            WebSocketEvent<OnlineStatusMessage> event = new WebSocketEvent<>("ONLINE_STATUS", msg);
-            messagingTemplate.convertAndSend("/topic/room/" + room, event);
-        }
+    }
+
+    public boolean isUserOnline(String userId) {
+        return userId != null && onlineUsers.contains(userId);
     }
 }

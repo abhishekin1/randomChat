@@ -1,4 +1,4 @@
-package com.randomchat.chat_backend.model;
+package com.randomchat.chat_backend.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OnlineStatusMessage {
+public class OnlineStatusDTO {
     private String senderId;
     private String conversationId;
     private boolean online;

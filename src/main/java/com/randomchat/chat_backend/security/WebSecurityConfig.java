@@ -21,7 +21,7 @@ public class WebSecurityConfig {
                 .sessionManagement(sessionConfig ->
                         sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**", "/auth/**").permitAll()
+                        .requestMatchers("/public/**", "/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/users/**", "/ws-chat/**").permitAll()
 //                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

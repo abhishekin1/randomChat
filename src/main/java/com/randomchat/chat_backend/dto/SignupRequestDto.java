@@ -25,7 +25,7 @@ public class SignupRequestDto {
     private String email;
 
     @NotBlank(message = "Gender is mandatory")
-    @Pattern(regexp = "^(Male|Female|Other)$", message = "Gender must be Male, Female, or Other")
+    @Pattern(regexp = "^(boy|girl)$", message = "Gender must be boy or girl")
     private String gender;
 
     private String bio;

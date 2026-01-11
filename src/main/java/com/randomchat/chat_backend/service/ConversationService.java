@@ -1,19 +1,18 @@
 package com.randomchat.chat_backend.service;
 
 import com.randomchat.chat_backend.Enums;
+import com.randomchat.chat_backend.dto.UserConversationDTO;
 import com.randomchat.chat_backend.model.Conversation;
 import com.randomchat.chat_backend.model.Message;
 import com.randomchat.chat_backend.model.User;
-import com.randomchat.chat_backend.model.UserConversationDisplay;
 import com.randomchat.chat_backend.repository.ConversationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class ConversationService {
@@ -40,29 +39,65 @@ public class ConversationService {
     }
 
     // ✅ Get all conversations by user (either as user1 or user2)
-    public List<UserConversationDisplay> getUserConversations(String userId) {
+    public List<UserConversationDTO> getUserConversations(String userId) {
         List<Conversation> conversations = conversationRepository.findByUserId(userId);
-        List<UserConversationDisplay> userConversationDisplays = new ArrayList<>();
+        
+        if (conversations.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Collect friend IDs
+        List<String> friendIds = conversations.stream()
+                .map(c -> Objects.equals(c.getUser1Id(), userId) ? c.getUser2Id() : c.getUser1Id())
+                .distinct()
+                .toList();
+
+        // Fetch users in batch
+        Map<String, User> userMap = userService.getUsersByIds(friendIds).stream()
+                .collect(Collectors.toMap(User::getUsername, Function.identity()));
+
+        List<UserConversationDTO> userConversationDisplays = new ArrayList<>();
         for(Conversation c :  conversations) {
             long conversationId = c.getId();
+            String friendId = Objects.equals(c.getUser1Id(), userId) ? c.getUser2Id() : c.getUser1Id();
+            User friendUser = userMap.get(friendId);
+            
+            if (friendUser == null) continue;
 
-            User friendUser = Objects.equals(c.getUser1Id(), userId) ?  userService.getUserByDeviceId(c.getUser2Id()).get() : userService.getUserByDeviceId(c.getUser1Id()).get();
             String friendUserId = friendUser.getUsername();
             String friendUserName = friendUser.getName();
             String photoUrl = friendUser.getPhotoUrl();
 
-            Message latestMessage = messageService.getLatestMessageInConversation(conversationId).get();
-            String lastMessage = latestMessage.getMessage();
-            Boolean isByYou = latestMessage.getSenderId().equals(userId);
-            Enums.MessageStatus messageStatus = latestMessage.getStatus();
-            LocalDateTime lastMessageTime = latestMessage.getTimeStamp();
-            Enums.MessageType messageType = latestMessage.getType();
+            Optional<Message> latestMessageOpt = messageService.getLatestMessageInConversation(conversationId);
+            String lastMessage = null;
+            Boolean isByYou = null;
+            Enums.MessageStatus messageStatus = null;
+            LocalDateTime lastMessageTime = null;
+            Enums.MessageType messageType = null;
+
+            if (latestMessageOpt.isPresent()) {
+                Message latestMessage = latestMessageOpt.get();
+                lastMessage = latestMessage.getMessage();
+                isByYou = latestMessage.getSenderId().equals(userId);
+                messageStatus = latestMessage.getStatus();
+                lastMessageTime = latestMessage.getTimeStamp();
+                messageType = latestMessage.getType();
+            }
+
             Boolean isTyping = Enums.TypingStatus.BOTH.equals(c.getTyping())
                                 || (Enums.TypingStatus.USER1.equals(c.getTyping()) && friendUserId.equals(c.getUser1Id()))
                                 || (Enums.TypingStatus.USER2.equals(c.getTyping()) && friendUserId.equals(c.getUser2Id()));
 
-            userConversationDisplays.add(new UserConversationDisplay(conversationId, friendUserName, friendUserId,photoUrl, lastMessage, isByYou, messageStatus, lastMessageTime, messageType, isTyping));
+            userConversationDisplays.add(new UserConversationDTO(conversationId, friendUserName, friendUserId,photoUrl, lastMessage, isByYou, messageStatus, lastMessageTime, messageType, isTyping));
         }
+        
+        userConversationDisplays.sort(
+                Comparator.comparing(
+                        UserConversationDTO::getLastMessageTime,
+                        Comparator.nullsLast(Comparator.reverseOrder())
+                )
+        );
+
         return  userConversationDisplays;
     }
 
@@ -75,5 +110,9 @@ public class ConversationService {
             conversation.setEndedAt(LocalDateTime.now());
             conversationRepository.save(conversation);
         }
+    }
+
+    public Optional<Conversation> getConversationBetween(String user1Id, String user2Id) {
+        return conversationRepository.findBetweenUsers(user1Id, user2Id);
     }
 }

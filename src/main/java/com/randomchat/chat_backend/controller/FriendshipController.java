@@ -1,8 +1,10 @@
 package com.randomchat.chat_backend.controller;
 
+import com.randomchat.chat_backend.Enums;
+import com.randomchat.chat_backend.model.Conversation;
 import com.randomchat.chat_backend.model.Friendship;
 import com.randomchat.chat_backend.model.User;
-import com.randomchat.chat_backend.model.UserConversationDisplay;
+import com.randomchat.chat_backend.service.ConversationService;
 import com.randomchat.chat_backend.service.FriendshipService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,18 +19,20 @@ import java.util.Optional;
 public class FriendshipController {
 
     private final FriendshipService friendshipService;
+    private final ConversationService conversationService;
 
-    public FriendshipController(FriendshipService friendshipService) {
+    public FriendshipController(FriendshipService friendshipService, ConversationService conversationService) {
         this.friendshipService = friendshipService;
+        this.conversationService = conversationService;
     }
 
     @PostMapping("/request/{userId}/{friendId}/{send_or_accept}")
-    public String friendRequest(@PathVariable String userId, @PathVariable String friendId, @PathVariable String send_or_accept) {
+    public ResponseEntity<?> friendRequest(@PathVariable String userId, @PathVariable String friendId, @PathVariable String send_or_accept) {
         if(Objects.equals(send_or_accept, "send")){
             if (friendshipService.getFriendshipBetween(userId, friendId).isPresent()) {
                 return ResponseEntity
                         .status(409)
-                        .body("Friendship or request already exists").toString();
+                        .body("Friendship or request already exists");
             }
             Friendship friendship = new Friendship();
             friendship.setUserId(userId);
@@ -36,17 +40,41 @@ public class FriendshipController {
             friendship.setCreatedAt(LocalDateTime.now());
             friendship.setStatus(Friendship.FriendshipStatus.PENDING);
             friendshipService.saveFriendship(friendship);
-            return friendship.toString();
-        } else {
-            if (friendshipService.getFriendshipBetween(userId, friendId).isEmpty()) {
+            return ResponseEntity.ok(friendship);
+        } else if (Objects.equals(send_or_accept, "accept")) {
+            Optional<Friendship> optionalFriendship = friendshipService.getFriendshipBetween(userId, friendId);
+            if (optionalFriendship.isEmpty()) {
                 return ResponseEntity
                         .status(404)
-                        .body("Friendship or request do not exists").toString();
+                        .body("Friendship or request do not exists");
             }
-            Friendship friendship = friendshipService.getFriendshipBetween(userId, friendId).get();
+            Friendship friendship = optionalFriendship.get();
+            if (friendship.getStatus() == Friendship.FriendshipStatus.ACCEPTED) {
+                return ResponseEntity.ok(friendship);
+            }
             friendship.setStatus(Friendship.FriendshipStatus.ACCEPTED);
             friendshipService.saveFriendship(friendship);
-            return friendship.toString();
+
+            // Create conversation if not exists
+            if (conversationService.getConversationBetween(userId, friendId).isEmpty()) {
+                Conversation conversation = new Conversation();
+                conversation.setUser1Id(userId);
+                conversation.setUser2Id(friendId);
+                conversation.setStartedAt(LocalDateTime.now());
+                conversation.setTyping(Enums.TypingStatus.NO);
+                conversationService.saveConversation(conversation);
+            }
+
+            return ResponseEntity.ok(friendship);
+        } else if (Objects.equals(send_or_accept, "reject")) {
+             Optional<Friendship> optionalFriendship = friendshipService.getFriendshipBetween(userId, friendId);
+             if (optionalFriendship.isPresent()) {
+                 friendshipService.deleteFriendship(userId, friendId);
+                 return ResponseEntity.ok("Friend request rejected");
+             }
+             return ResponseEntity.status(404).body("Friendship request not found");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid action");
         }
 
     }
@@ -61,6 +89,7 @@ public class FriendshipController {
         return friendshipService.getSentPendingRequests(userId);
     }
 
+    //Used to see friends.
     @GetMapping("/list/{userId}")
     public List<User> getAllFriendUsers(@PathVariable String userId) {
         return friendshipService.getAllFriends(userId);
@@ -80,25 +109,4 @@ public class FriendshipController {
                 .orElseGet(() -> ResponseEntity.status(404).body("No friendship exists"));
     }
 
-
-
-
-    // ✅ Get all friendships
-    @GetMapping
-    public List<Friendship> getAllFriendships() {
-        return friendshipService.getAllFriendships();
-    }
-
-    // ✅ Create a new friendship (send request)
-    @PostMapping
-    public Friendship createFriendship(@RequestBody Friendship friendship) {
-        friendship.setCreatedAt(LocalDateTime.now());
-        friendship.setStatus(Friendship.FriendshipStatus.PENDING);
-        return friendshipService.saveFriendship(friendship);
-    }
-
-    @GetMapping("conversations/{userId}")
-    public List<UserConversationDisplay> getUserConversations(@PathVariable String userId) {
-        return friendshipService.getUserConversations(userId);
-    }
 }
