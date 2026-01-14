@@ -1,5 +1,6 @@
 package com.randomchat.chat_backend.controller;
 
+import com.randomchat.chat_backend.Enums;
 import com.randomchat.chat_backend.dto.UserConversationDTO;
 import com.randomchat.chat_backend.dto.WebSocketEventDTO;
 import com.randomchat.chat_backend.model.Message;
@@ -8,6 +9,7 @@ import com.randomchat.chat_backend.service.FriendshipService;
 import com.randomchat.chat_backend.service.UserService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -15,10 +17,12 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Controller
+@Slf4j
 @RequiredArgsConstructor
 public class RandomChatController {
 
@@ -28,7 +32,7 @@ public class RandomChatController {
     private final UserService userService;
     @Autowired
     private final FriendshipService friendshipService;
-    
+
     // AtomicReference holds the single user waiting for a match.
     // This guarantees thread safety without blocking locks.
     private final AtomicReference<String> waitingUser = new AtomicReference<>();
@@ -86,18 +90,24 @@ public class RandomChatController {
                 user.getPhotoUrl()
         );
 
-        messagingTemplate.convertAndSend("/topic/room/random/" + userId, toUser);
-        messagingTemplate.convertAndSend("/topic/room/random/" + friendUserId, toFriend);
+        WebSocketEventDTO<UserConversationDTO> eventToUser = new WebSocketEventDTO<>(Enums.WebSocketEventType.CONVERSATION_DTO, toUser);
+        WebSocketEventDTO<UserConversationDTO> eventToFriend = new WebSocketEventDTO<>(Enums.WebSocketEventType.CONVERSATION_DTO, toFriend);
+
+        messagingTemplate.convertAndSend("/topic/room/random/" + userId, eventToUser);
+        messagingTemplate.convertAndSend("/topic/room/random/" + friendUserId, eventToFriend);
     }
 
     @MessageMapping("/chat.random.send")
     public void handleChatMessage(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
         String userId = (String) headerAccessor.getSessionAttributes().get("userId");
+
         if (userId != null) {
             message.setSenderId(userId);
         }
+        message.setTimeStamp(LocalDateTime.now());
+        log.info("handleChatMessage: {}", message);
         String topic = "/topic/room/" + message.getSenderId() + "-" + message.getConversationId();
-        WebSocketEventDTO<Message> event = new WebSocketEventDTO<>("MESSAGE", message);
+        WebSocketEventDTO<Message> event = new WebSocketEventDTO<>(Enums.WebSocketEventType.MESSAGE, message);
         messagingTemplate.convertAndSend(topic, event);
     }
 

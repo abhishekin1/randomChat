@@ -88,7 +88,7 @@ public class ConversationService {
                                 || (Enums.TypingStatus.USER1.equals(c.getTyping()) && friendUserId.equals(c.getUser1Id()))
                                 || (Enums.TypingStatus.USER2.equals(c.getTyping()) && friendUserId.equals(c.getUser2Id()));
 
-            userConversationDisplays.add(new UserConversationDTO(conversationId, friendUserName, friendUserId,photoUrl, lastMessage, isByYou, messageStatus, lastMessageTime, messageType, isTyping));
+            userConversationDisplays.add(new UserConversationDTO(conversationId, friendUserName, friendUserId,photoUrl, lastMessage, isByYou, messageStatus, lastMessageTime, messageType));
         }
         
         userConversationDisplays.sort(

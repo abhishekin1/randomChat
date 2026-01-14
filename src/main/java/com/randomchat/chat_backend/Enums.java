@@ -23,4 +23,10 @@ public class Enums {
         NO          // No one is typing
     }
 
+    public enum WebSocketEventType {
+        MESSAGE,
+        TYPING,
+        ONLINE_STATUS,
+        CONVERSATION_DTO
+    }
 }

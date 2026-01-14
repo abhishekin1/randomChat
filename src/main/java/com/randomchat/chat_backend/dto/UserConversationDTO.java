@@ -24,7 +24,6 @@ public class UserConversationDTO {
     private LocalDateTime lastMessageTime;
     @Enumerated(EnumType.STRING)
     private Enums.MessageType messageType;
-    private Boolean isTyping;
 
     public UserConversationDTO(Long conversationId, String friendUserName, String friendUserId, String photoUrl) {
         this.conversationId = conversationId;
